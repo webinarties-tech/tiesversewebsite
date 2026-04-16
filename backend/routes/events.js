@@ -5,7 +5,7 @@ const {createClient} = require('@supabase/supabase-js');
 const supabase = createClient(process.env.SUPABASE_URL,
 process.env.SUPABASE_SERVICE_KEY);
 
-//GET all Events
+//GET all events
 router.get('/', async (req,res)=>{
     const{data, error} = await supabase
         .from('events')
@@ -15,7 +15,7 @@ router.get('/', async (req,res)=>{
     res.json(data);
 });
 
-//GET featured Events
+//GET featured events
 router.get('/featured', async (req, res) => {
     const {data, error} = await supabase
         .from('events')
@@ -32,11 +32,23 @@ router.get('/featured', async (req, res) => {
 router.post('/:id', async (req, res)=>{
     const {data, error} = await supabase
         .from('events')
-        .update(req.body)
-        .eq('id', req.params.id);
-    if(error) return res.status(500).json({erro: error.message});
+        .insert(req.body)
+        
+    if(error) return res.status(500).json({error: error.message});
     res.json(data);
 });
+
+
+//PUT event
+router.put('/:id', async (req, res)=>{
+    const{data, error} = await supabase
+        .from('events')
+        .update(req.body)
+        .eq('id', req.params.id);
+    if (error) return res.status(500).json({error: error.message});
+    res.join(data);
+});
+
 
 //DELETE event
 router.delete('/:id', async (req, res)=>{
