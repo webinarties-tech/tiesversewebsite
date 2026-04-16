@@ -23,9 +23,8 @@ router.get('/featured',authMiddleware, async (req, res) => {
         .eq('is_featured', true)
         .order('created_at', {ascending : false})
         .limit(1)
-        .single()
-    if(error) return res.status(500).json({error: error.message});
-    res.json(data);
+    // if(error) return res.status(500).json({error: error.message});
+    res.json(data?.[0] || null);
 });
 
 //POST create event (admin only)
@@ -57,7 +56,8 @@ router.delete('/:id',authMiddleware, async (req, res)=>{
         .delete()
         .eq('id', req.params.id);
     if(error) return res.status(500).json({error: error.message});
-    res.json("Deleted successfully");
+    res.json({message: "Deleted successfully"});
+
 }); 
 
 module.exports = router;
