@@ -48,7 +48,8 @@ router.delete('/:id',authMiddleware, async (req, res)=>{
         .delete()
         .eq('id', req.params.id);
     if(error) return res.status(500).json({error: error.message});
-    res.json("Deleted successfully");
+    res.json({message: "Deleted successfully"});
+
 }); 
 
 module.exports = router;
