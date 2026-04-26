@@ -549,14 +549,34 @@ const Admin = () => {
                     <div className="input-group"><label>Member Name</label><input type="text" name="name" value={formData.name || ''} onChange={handleInputChange} required /></div>
                     <div className="input-group"><label>Designation / Role</label><input type="text" name="role" value={formData.role || ''} onChange={handleInputChange} required /></div>
                     <div className="input-group">
-                        <label style={{ color: 'var(--accent-orange)' }}>REQUIRED: 4:5 ASPECT RATIO</label>
+                        <label style={{ color: 'var(--accent-orange)' }}>PHOTO</label>
+
+                        {/* OPTION 1: Paste Cloudinary URL directly */}
+                        <div style={{ marginBottom: '12px' }}>
+                            <label style={{ fontSize: '11px', color: '#aaa', letterSpacing: '1px' }}>OPTION 1 — PASTE CLOUDINARY URL</label>
+                            <input
+                                type="text"
+                                placeholder="https://res.cloudinary.com/dgmxkx5x8/..."
+                                value={formData.image_url || ''}
+                                onChange={(e) => {
+                                    setFormData({ ...formData, image_url: e.target.value, imageFile: null });
+                                    setPreviewUrl(e.target.value);
+                                }}
+                                style={{ width: '100%', marginTop: '6px' }}
+                            />
+                        </div>
+
+                        <div style={{ textAlign: 'center', color: '#555', fontSize: '11px', fontWeight: '800', margin: '10px 0', letterSpacing: '2px' }}>— OR —</div>
+
+                        {/* OPTION 2: Upload from desktop → auto uploads to Cloudinary */}
                         <div className="upload-container">
+                            <label style={{ fontSize: '11px', color: '#aaa', letterSpacing: '1px' }}>OPTION 2 — UPLOAD FROM DESKTOP (auto-uploads to Cloudinary)</label>
                             {previewUrl && (
-                                <div className="image-preview" style={{ width: '220px', aspectRatio: '4/5' }}>
+                                <div className="image-preview" style={{ width: '220px', aspectRatio: '4/5', marginTop: '10px' }}>
                                     <img src={previewUrl} alt="prev" style={{ objectFit: 'contain' }} />
                                 </div>
                             )}
-                            <input type="file" accept="image/*" onChange={handleFileChange} />
+                            <input type="file" accept="image/*" onChange={handleFileChange} style={{ marginTop: '8px' }} />
                             <p className="upload-hint">Please maintain 4:5 aspect ratio for best display.</p>
                         </div>
                     </div>
