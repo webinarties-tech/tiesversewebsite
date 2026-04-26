@@ -104,6 +104,12 @@ export const updateSetting = (key, data) => adminFetch(`/api/settings/${key}`, '
 
 export const getTeam = () => publicFetch('/api/team');
 
+// CLOUDINARY
+
+export const getCloudinaryImages = () => adminFetch('/api/cloudinary/images');
+
+export const deleteCloudinaryImage = (public_id) => adminFetch('/api/cloudinary/delete', 'DELETE', { public_id });
+
 export const createMember = (data) => adminFetch('/api/team', 'POST', data);
 
 export const updateMember = (id, data) => adminFetch(`/api/team/${id}`, 'PUT', data);

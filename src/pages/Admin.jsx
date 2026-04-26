@@ -6,7 +6,8 @@ import {
     getYoutubeVideos, createYoutubeVideo, updateYoutubeVideo, deleteYoutubeVideo,
     getWorkshops, createWorkshop, updateWorkshop, deleteWorkshop,
     getTeam, createMember, updateMember, deleteMember,
-    getSettings, updateSetting
+    getSettings, updateSetting,
+    getCloudinaryImages, deleteCloudinaryImage
 } from '../apiClient';
 
 import '../styles/Admin.css';
@@ -28,21 +29,21 @@ import ws2 from '../assets/ws2.png';
 import ws3 from '../assets/ws3.png';
 import ws4 from '../assets/ws4.png';
 
-import prithviraajImg from '../assets/pruthvi.jpg';
-import ashoImg from '../assets/asho.jpg';
-import hardikImg from '../assets/hardik.jpg';
-import nishuImg from '../assets/nishu.jpg';
-import nirjharImg from '../assets/nirjhar.jpg';
-import AdityaImg from '../assets/Aditya.jpg';
-import AbhishekImg from '../assets/trial.jpg';
-import jalImg from '../assets/jal.jpg';
-import mihirImg from '../assets/mihir.jpg';
-import aditiImg from '../assets/aditi.jpg';
-import ritikaImg from '../assets/ritika.jpg';
-import harshaImg from '../assets/harsha.jpg';
-import parthimg from '../assets/parth.jpg';
-import nayoimg from '../assets/nayo.jpg';
-import smitiimg from '../assets/smiti.jpg';
+// import prithviraajImg from '../assets/pruthvi.jpg';
+// import ashoImg from '../assets/asho.jpg';
+// import hardikImg from '../assets/hardik.jpg';
+// import nishuImg from '../assets/nishu.jpg';
+// import nirjharImg from '../assets/nirjhar.jpg';
+// import AdityaImg from '../assets/Aditya.jpg';
+// import AbhishekImg from '../assets/trial.jpg';
+// import jalImg from '../assets/jal.jpg';
+// import mihirImg from '../assets/mihir.jpg';
+// import aditiImg from '../assets/aditi.jpg';
+// import ritikaImg from '../assets/ritika.jpg';
+// import harshaImg from '../assets/harsha.jpg';
+// import parthimg from '../assets/parth.jpg';
+// import nayoimg from '../assets/nayo.jpg';
+// import smitiimg from '../assets/smiti.jpg';
 
 // --- CLOUDINARY CONFIGURATION ---
 const CLOUD_NAME = "dgmxkx5x8"; // 
@@ -78,6 +79,40 @@ const Admin = () => {
     const [unassignedEvents, setUnassignedEvents] = useState([]);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const [cloudinaryPicker, setCloudinaryPicker] = useState({ open: false, images: [], loading: false });
+
+    // EXTRACT PUBLIC_ID FROM CLOUDINARY URL
+    const getPublicId = (url) => {
+        if (!url || !url.includes('cloudinary.com')) return null;
+        const afterUpload = url.split('/upload/')[1];
+        if (!afterUpload) return null;
+        // Remove transformations (e.g. f_auto,q_auto/ or w_1200,c_limit/)
+        const withoutTransforms = afterUpload.replace(/^(?:[a-z]+(?:_[^,/]+)?(?:,[a-z]+(?:_[^,/]+)?)*\/)+/, '');
+        // Remove version prefix (e.g. v1234567890/)
+        const withoutVersion = withoutTransforms.replace(/^v\d+\//, '');
+        // Remove file extension
+        return withoutVersion.replace(/\.[^/.]+$/, '');
+    };
+
+    // --- OPEN CLOUDINARY PICKER ---
+    const openCloudinaryPicker = async () => {
+        setCloudinaryPicker({ open: true, images: [], loading: true });
+        try {
+            const images = await getCloudinaryImages();
+            setCloudinaryPicker({ open: true, images: Array.isArray(images) ? images : [], loading: false });
+        } catch (err) {
+            showNotice('Failed to load Cloudinary images', 'error');
+            setCloudinaryPicker({ open: false, images: [], loading: false });
+        }
+    };
+
+    // --- SELECT IMAGE FROM PICKER ---
+    const selectCloudinaryImage = (url) => {
+        const fieldName = activeTab === 'youtube_videos' ? 'thumbnail_url' : 'image_url';
+        setFormData(prev => ({ ...prev, [fieldName]: url, imageFile: null }));
+        setPreviewUrl(url);
+        setCloudinaryPicker({ open: false, images: [], loading: false });
+    };
 
     // --- AUTH EFFECT ---
     useEffect(() => {
@@ -116,25 +151,25 @@ const Admin = () => {
             if (item.title === 'Bharat Manthan 2025') return ws4;
             return ws1; 
         }
-        if (activeTab === 'team') {
-            if (item.name === "Pruthaviraj Singh") return prithviraajImg;
-            if (item.name === "Hardik Pathak") return hardikImg;
-            if (item.name === "Ritika Verma") return ritikaImg;
-            if (item.name === "Ashutosh Patra") return ashoImg;
-            if (item.name === "Nishu Yadav") return nishuImg;
-            if (item.name === "Nirjhar Chakraborty") return nirjharImg;
-            if (item.name === "Aditya Singh") return AdityaImg;
-            if (item.name === "Abhishek") return AbhishekImg;
-            if (item.name === "Jal Trivedi") return jalImg;
-            if (item.name === "Aditi Malviya") return aditiImg;
-            if (item.name === "Parth Naik") return parthimg;
-            if (item.name === "Nayonika") return nayoimg;
-            if (item.name === "Smiti") return smitiimg;
-            if (item.name === "Harsha Bhadawar") return harshaImg;
-            if (item.name === "Adv. Mihir") return mihirImg;
-            return prithviraajImg; 
-        }
-        return null;
+        // if (activeTab === 'team') {
+        //     if (item.name === "Pruthaviraj Singh") return prithviraajImg;
+        //     if (item.name === "Hardik Pathak") return hardikImg;
+        //     if (item.name === "Ritika Verma") return ritikaImg;
+        //     if (item.name === "Ashutosh Patra") return ashoImg;
+        //     if (item.name === "Nishu Yadav") return nishuImg;
+        //     if (item.name === "Nirjhar Chakraborty") return nirjharImg;
+        //     if (item.name === "Aditya Singh") return AdityaImg;
+        //     if (item.name === "Abhishek") return AbhishekImg;
+        //     if (item.name === "Jal Trivedi") return jalImg;
+        //     if (item.name === "Aditi Malviya") return aditiImg;
+        //     if (item.name === "Parth Naik") return parthimg;
+        //     if (item.name === "Nayonika") return nayoimg;
+        //     if (item.name === "Smiti") return smitiimg;
+        //     if (item.name === "Harsha Bhadawar") return harshaImg;
+        //     if (item.name === "Adv. Mihir") return mihirImg;
+        //     return prithviraajImg; 
+        // }
+        // return null;
     };
 
     const resetForm = () => {
@@ -386,10 +421,20 @@ const Admin = () => {
     const handleDelete = async () => {
         const { id } = deleteModal;
         setLoading(true);
+
+        const item = items.find(i => i.id === id);
+        const imageUrl = item?.image_url || item?.thumbnail_url;
+
         const deleteFnMap = { events: deleteEvent, articles: deleteArticle, youtube_videos: deleteYoutubeVideo, workshops: deleteWorkshop, team: deleteMember };
         const res = await deleteFnMap[activeTab](id);
         if (res?.error) showNotice('Error deleting: ' + res.error, 'error');
         else {
+            if (imageUrl) {
+                const publicId = getPublicId(imageUrl);
+                if (publicId) {
+                    try { await deleteCloudinaryImage(publicId); } catch (err) { console.warn('Cloudinary delete skipped:', err); }
+                }
+            }
             showNotice('Entry removed.');
             if (id === editingId) resetForm();
             fetchData();
@@ -480,6 +525,10 @@ const Admin = () => {
                                     <img src={previewUrl} alt="prev" style={{ objectFit: 'contain' }} />
                                 </div>
                             )}
+                            <button type="button" onClick={openCloudinaryPicker} style={{ width: '100%', padding: '12px', background: '#111', color: '#fff', border: '1px solid #333', fontFamily: 'inherit', fontWeight: '700', letterSpacing: '1px', fontSize: '11px', cursor: 'pointer', marginBottom: '8px' }}>
+                                📂 BROWSE CLOUDINARY LIBRARY
+                            </button>
+                            <div style={{ textAlign: 'center', color: '#555', fontSize: '10px', fontWeight: '800', margin: '6px 0', letterSpacing: '2px' }}>— OR UPLOAD NEW —</div>
                             <input type="file" accept="image/*" onChange={handleFileChange} />
                             <p className="upload-hint">Please maintain 3:2 aspect ratio for best display.</p>
                         </div>
@@ -509,6 +558,10 @@ const Admin = () => {
                                     <img src={previewUrl} alt="prev" style={{ objectFit: 'contain' }} />
                                 </div>
                             )}
+                            <button type="button" onClick={openCloudinaryPicker} style={{ width: '100%', padding: '12px', background: '#111', color: '#fff', border: '1px solid #333', fontFamily: 'inherit', fontWeight: '700', letterSpacing: '1px', fontSize: '11px', cursor: 'pointer', marginBottom: '8px' }}>
+                                📂 BROWSE CLOUDINARY LIBRARY
+                            </button>
+                            <div style={{ textAlign: 'center', color: '#555', fontSize: '10px', fontWeight: '800', margin: '6px 0', letterSpacing: '2px' }}>— OR UPLOAD NEW —</div>
                             <input type="file" accept="image/*" onChange={handleFileChange} />
                             <p className="upload-hint">Please maintain 3:2 aspect ratio for best display.</p>
                         </div>
@@ -537,6 +590,10 @@ const Admin = () => {
                                     <img src={previewUrl} alt="prev" style={{ objectFit: 'contain' }} />
                                 </div>
                             )}
+                            <button type="button" onClick={openCloudinaryPicker} style={{ width: '100%', padding: '12px', background: '#111', color: '#fff', border: '1px solid #333', fontFamily: 'inherit', fontWeight: '700', letterSpacing: '1px', fontSize: '11px', cursor: 'pointer', marginBottom: '8px' }}>
+                                📂 BROWSE CLOUDINARY LIBRARY
+                            </button>
+                            <div style={{ textAlign: 'center', color: '#555', fontSize: '10px', fontWeight: '800', margin: '6px 0', letterSpacing: '2px' }}>— OR UPLOAD NEW —</div>
                             <input type="file" accept="image/*" onChange={handleFileChange} />
                             <p className="upload-hint">Please maintain 4:5 aspect ratio for best display.</p>
                         </div>
@@ -551,19 +608,17 @@ const Admin = () => {
                     <div className="input-group">
                         <label style={{ color: 'var(--accent-orange)' }}>PHOTO</label>
 
-                        {/* OPTION 1: Paste Cloudinary URL directly */}
+                        {/* OPTION 1: Browse Cloudinary Library */}
                         <div style={{ marginBottom: '12px' }}>
-                            <label style={{ fontSize: '11px', color: '#aaa', letterSpacing: '1px' }}>OPTION 1 — PASTE CLOUDINARY URL</label>
-                            <input
-                                type="text"
-                                placeholder="https://res.cloudinary.com/dgmxkx5x8/..."
-                                value={formData.image_url || ''}
-                                onChange={(e) => {
-                                    setFormData({ ...formData, image_url: e.target.value, imageFile: null });
-                                    setPreviewUrl(e.target.value);
-                                }}
-                                style={{ width: '100%', marginTop: '6px' }}
-                            />
+                            <label style={{ fontSize: '11px', color: '#aaa', letterSpacing: '1px' }}>OPTION 1 — BROWSE CLOUDINARY LIBRARY</label>
+                            {previewUrl && (
+                                <div className="image-preview" style={{ width: '220px', aspectRatio: '4/5', marginTop: '10px', marginBottom: '10px' }}>
+                                    <img src={previewUrl} alt="prev" style={{ objectFit: 'contain' }} />
+                                </div>
+                            )}
+                            <button type="button" onClick={openCloudinaryPicker} style={{ width: '100%', padding: '12px', background: '#111', color: '#fff', border: '1px solid #333', fontFamily: 'inherit', fontWeight: '700', letterSpacing: '1px', fontSize: '11px', cursor: 'pointer', marginTop: '8px' }}>
+                                📂 BROWSE CLOUDINARY LIBRARY
+                            </button>
                         </div>
 
                         <div style={{ textAlign: 'center', color: '#555', fontSize: '11px', fontWeight: '800', margin: '10px 0', letterSpacing: '2px' }}>— OR —</div>
@@ -571,11 +626,6 @@ const Admin = () => {
                         {/* OPTION 2: Upload from desktop → auto uploads to Cloudinary */}
                         <div className="upload-container">
                             <label style={{ fontSize: '11px', color: '#aaa', letterSpacing: '1px' }}>OPTION 2 — UPLOAD FROM DESKTOP (auto-uploads to Cloudinary)</label>
-                            {previewUrl && (
-                                <div className="image-preview" style={{ width: '220px', aspectRatio: '4/5', marginTop: '10px' }}>
-                                    <img src={previewUrl} alt="prev" style={{ objectFit: 'contain' }} />
-                                </div>
-                            )}
                             <input type="file" accept="image/*" onChange={handleFileChange} style={{ marginTop: '8px' }} />
                             <p className="upload-hint">Please maintain 4:5 aspect ratio for best display.</p>
                         </div>
@@ -636,6 +686,10 @@ const Admin = () => {
                                     <img src={previewUrl || formData.image_url} alt="prev" style={{ objectFit: 'contain' }} />
                                 </div>
                             )}
+                            <button type="button" onClick={openCloudinaryPicker} style={{ width: '100%', padding: '12px', background: '#111', color: '#fff', border: '1px solid #333', fontFamily: 'inherit', fontWeight: '700', letterSpacing: '1px', fontSize: '11px', cursor: 'pointer', marginBottom: '8px' }}>
+                                📂 BROWSE CLOUDINARY LIBRARY
+                            </button>
+                            <div style={{ textAlign: 'center', color: '#555', fontSize: '10px', fontWeight: '800', margin: '6px 0', letterSpacing: '2px' }}>— OR UPLOAD NEW —</div>
                             <input type="file" accept="image/*" onChange={handleFileChange} />
                             <p className="upload-hint">Please maintain 3:2 aspect ratio for best display.</p>
                         </div>
@@ -953,6 +1007,45 @@ const Admin = () => {
                             <button className="btn-cancel-modal" onClick={() => setSizeWarning({ open: false, file: null })}>Select Another</button>
                             <button className="btn-confirm-delete" style={{ background: 'var(--accent-orange)' }} onClick={proceedWithImage}>Proceed Anyway</button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {cloudinaryPicker.open && (
+                <div className="modal-overlay" style={{ zIndex: 1100 }}>
+                    <div className="custom-modal shadow-glass" style={{ maxWidth: '820px', width: '92vw', maxHeight: '82vh', display: 'flex', flexDirection: 'column', padding: '24px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexShrink: 0 }}>
+                            <h3 style={{ margin: 0, letterSpacing: '2px', fontSize: '13px' }}>CLOUDINARY IMAGE LIBRARY</h3>
+                            <button
+                                onClick={() => setCloudinaryPicker({ open: false, images: [], loading: false })}
+                                style={{ background: 'transparent', color: '#aaa', border: 'none', fontSize: '20px', cursor: 'pointer', lineHeight: 1 }}
+                            >✕</button>
+                        </div>
+                        {cloudinaryPicker.loading ? (
+                            <p style={{ textAlign: 'center', padding: '60px 0', color: '#aaa', fontSize: '12px', letterSpacing: '2px' }}>LOADING IMAGES...</p>
+                        ) : cloudinaryPicker.images.length === 0 ? (
+                            <p style={{ textAlign: 'center', padding: '60px 0', color: '#555', fontSize: '12px' }}>
+                                No images found in <code>admin_assets</code> folder on Cloudinary.<br />
+                                <span style={{ opacity: 0.6 }}>Upload images first using the file input below.</span>
+                            </p>
+                        ) : (
+                            <div style={{ overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '10px', padding: '4px 2px' }}>
+                                {cloudinaryPicker.images.map(img => (
+                                    <div
+                                        key={img.public_id}
+                                        onClick={() => selectCloudinaryImage(img.secure_url)}
+                                        style={{ cursor: 'pointer', border: '2px solid #222', borderRadius: '4px', overflow: 'hidden', transition: 'border-color 0.15s' }}
+                                        onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent-orange)'}
+                                        onMouseLeave={e => e.currentTarget.style.borderColor = '#222'}
+                                    >
+                                        <img src={img.secure_url} alt="" style={{ width: '100%', height: '110px', objectFit: 'cover', display: 'block' }} />
+                                        <p style={{ fontSize: '9px', color: '#888', padding: '5px 6px', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            {img.public_id.split('/').pop()}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
