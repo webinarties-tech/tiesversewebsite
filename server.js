@@ -15,6 +15,7 @@ const settingsRoutes = require('./routes/settings');
 const teamRoutes = require('./routes/team');
 const cloudinaryRoutes = require('./routes/cloudinary');
 const guestsRoutes = require('./routes/guests');
+const networkRoutes = require('./routes/network');
 
 
 app.use(cors({origin : ['http://localhost:3000', 'http://localhost:5173', 'https://tiesverse.com']}));
@@ -29,6 +30,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/team', teamRoutes);
 app.use('/api/cloudinary', cloudinaryRoutes);
 app.use('/api/guests', guestsRoutes);
+app.use('/api/network', networkRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
