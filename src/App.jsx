@@ -9,6 +9,7 @@ import Preloader from './components/Preloader';
 // Pages
 import Home from './pages/Home';
 import Article from './pages/Article';
+import Research from './pages/Research';
 import Upcoming from './pages/Upcoming';
 import Events from './pages/Events';
 import NotFound from './pages/NotFound';

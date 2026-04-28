@@ -77,6 +77,7 @@ const Article = () => {
         const artResponse = await fetchWithTimeout(`${API_URL}/api/articles`);
         if (artResponse.ok) {
           const artData = await artResponse.json();
+          
           if (artData && !artData.error && artData.length > 0) {
             const formatted = artData.map(a => ({
               ...a,
@@ -85,11 +86,16 @@ const Article = () => {
             }));
             setInsights(formatted);
             setActive(formatted[0]);
+          } else {
+            // Throw error if DB is empty to trigger the catch block!
+            throw new Error("Database is empty, falling back to dummy data");
           }
+        } else {
+            throw new Error("Failed to fetch articles");
         }
       } catch (err) {
         console.error('Error fetching data:', err);
-        // Set dummy data for demo purposes
+        // Set dummy data for demo purposes if backend fails or is empty
         const dummyArticles = [
           {
             id: 1,
@@ -309,7 +315,6 @@ const Article = () => {
 
         .image-box {
           width: 100%;
-          /* FIX: Cap the max width to stop 4:5 ratio from making height massive */
           max-width: 450px; 
           aspect-ratio: 4 / 5; 
           border-radius: 16px;
@@ -325,7 +330,6 @@ const Article = () => {
           width: 100%;
           height: 100%;
           object-fit: cover;
-          /* FIX: Hint browser to prioritize image quality rendering */
           image-rendering: high-quality; 
           transition: transform 0.8s cubic-bezier(0.2, 1, 0.3, 1);
         }
