@@ -8,8 +8,7 @@ import {
     getTeam, createMember, updateMember, deleteMember,
     getSettings, updateSetting,
     getCloudinaryImages, deleteCloudinaryImage,
-    getGuests, createGuest, updateGuest, deleteGuest,
-    getNetworkImages, createNetworkImage, updateNetworkImage, deleteNetworkImage
+    getGuests, createGuest, updateGuest, deleteGuest
 } from '../apiClient';
 
 import '../styles/Admin.css';
@@ -83,7 +82,6 @@ const Admin = () => {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [cloudinaryPicker, setCloudinaryPicker] = useState({ open: false, images: [], loading: false });
     const [multiPickerSelected, setMultiPickerSelected] = useState([]);
-    const [networkFileBatch, setNetworkFileBatch] = useState([]);
     const [teamFileBatch, setTeamFileBatch] = useState([]);
 
     // EXTRACT PUBLIC_ID FROM CLOUDINARY URL
@@ -113,7 +111,7 @@ const Admin = () => {
 
     // SELECT IMAGE FROM PICKER
     const selectCloudinaryImage = (url) => {
-        if (activeTab === 'network' || activeTab === 'team') {
+        if (activeTab === 'team') {
             setMultiPickerSelected(prev =>
                 prev.includes(url) ? prev.filter(u => u !== url) : [...prev, url]
             );
@@ -123,22 +121,6 @@ const Admin = () => {
         setFormData(prev => ({ ...prev, [fieldName]: url, imageFile: null }));
         setPreviewUrl(url);
         setCloudinaryPicker({ open: false, images: [], loading: false });
-    };
-
-    // BATCH ADD SELECTED IMAGES (network tab only)
-    const confirmNetworkPickerSelection = async () => {
-        if (multiPickerSelected.length === 0) return;
-        setLoading(true);
-        let count = 0;
-        for (const url of multiPickerSelected) {
-            const res = await createNetworkImage({ image_url: url });
-            if (!res?.error) count++;
-        }
-        showNotice(`${count} image${count !== 1 ? 's' : ''} added to Our Network!`);
-        setMultiPickerSelected([]);
-        setCloudinaryPicker({ open: false, images: [], loading: false });
-        fetchData();
-        setLoading(false);
     };
 
     // BATCH ADD SELECTED IMAGES (team tab)
@@ -171,7 +153,7 @@ const Admin = () => {
 
     // --- HELPERS ---
     const getThumbnailFallback = (item) => {
-        if (activeTab === 'guests' || activeTab === 'network') return item.image_url || null;
+        if (activeTab === 'guests') return item.image_url || null;
         if (item.image_url || item.thumbnail_url) return item.image_url || item.thumbnail_url;
         if (activeTab === 'youtube_videos') {
             if (item.episode_id === 'EP.01') return yt1;
@@ -222,7 +204,6 @@ const Admin = () => {
         setPreviewUrl(null);
         setSizeWarning({ open: false, file: null });
         setMobileMenuOpen(false);
-        setNetworkFileBatch([]);
         setTeamFileBatch([]);
         setMultiPickerSelected([]);
     };
@@ -235,7 +216,6 @@ const Admin = () => {
         webinars: () => getWorkshopsByCategory('WEBINAR'),
         team: getTeam,
         guests: getGuests,
-        network: getNetworkImages,
     };
 
     const fetchData = async () => {
@@ -314,12 +294,7 @@ const Admin = () => {
         const files = Array.from(e.target.files || []);
         if (files.length === 0) return;
 
-        // Multi-file batch path for network and team tabs
-        if (activeTab === 'network' && files.length > 1) {
-            setNetworkFileBatch(files);
-            setPreviewUrl(null);
-            return;
-        }
+        // Multi-file batch path for team tab
         if (activeTab === 'team' && files.length > 1) {
             setTeamFileBatch(files);
             setPreviewUrl(null);
@@ -331,12 +306,6 @@ const Admin = () => {
             const img = new Image();
             img.src = URL.createObjectURL(file);
             img.onload = () => {
-                if (activeTab === 'network') {
-                    setFormData({ ...formData, imageFile: file });
-                    setPreviewUrl(img.src);
-                    return;
-                }
-
                 let expectedRatio, ratioLabel;
 
                 if (activeTab === 'articles' || activeTab === 'team' || activeTab === 'guests') {
@@ -413,25 +382,6 @@ const Admin = () => {
             return;
         }
 
-        // Batch file upload for network tab
-        if (activeTab === 'network' && networkFileBatch.length > 0) {
-            setLoading(true);
-            let count = 0;
-            for (const file of networkFileBatch) {
-                try {
-                    const url = await uploadImage(file);
-                    const res = await createNetworkImage({ image_url: url });
-                    if (!res?.error) count++;
-                } catch { /* skip failed uploads */ }
-            }
-            showNotice(`${count} image${count !== 1 ? 's' : ''} uploaded to Our Network!`);
-            setNetworkFileBatch([]);
-            resetForm();
-            fetchData();
-            setLoading(false);
-            return;
-        }
-
         setLoading(true);
 
         const { id, created_at, imageFile, ...sanitizedData } = formData;
@@ -462,8 +412,8 @@ const Admin = () => {
             if (activeTab === 'workshops' && !dataToSave.category) dataToSave.category = 'WEBINAR';
             if (activeTab === 'webinars') dataToSave.category = 'WEBINAR';
 
-            const updateFnMap = { events: updateEvent, articles: updateArticle, youtube_videos: updateYoutubeVideo, workshops: updateWorkshop, webinars: updateWorkshop, team: updateMember, guests: updateGuest, network: updateNetworkImage };
-            const createFnMap = { events: createEvent, articles: createArticle, youtube_videos: createYoutubeVideo, workshops: createWorkshop, webinars: createWorkshop, team: createMember, guests: createGuest, network: createNetworkImage };
+            const updateFnMap = { events: updateEvent, articles: updateArticle, youtube_videos: updateYoutubeVideo, workshops: updateWorkshop, webinars: updateWorkshop, team: updateMember, guests: updateGuest };
+            const createFnMap = { events: createEvent, articles: createArticle, youtube_videos: createYoutubeVideo, workshops: createWorkshop, webinars: createWorkshop, team: createMember, guests: createGuest };
 
             if (editingId) {
                 const res = await updateFnMap[activeTab](editingId, dataToSave);
@@ -538,7 +488,7 @@ const Admin = () => {
         const item = items.find(i => i.id === id);
         const imageUrl = item?.image_url || item?.thumbnail_url;
 
-        const deleteFnMap = { events: deleteEvent, articles: deleteArticle, youtube_videos: deleteYoutubeVideo, workshops: deleteWorkshop, webinars: deleteWorkshop, team: deleteMember, guests: deleteGuest, network: deleteNetworkImage };
+        const deleteFnMap = { events: deleteEvent, articles: deleteArticle, youtube_videos: deleteYoutubeVideo, workshops: deleteWorkshop, webinars: deleteWorkshop, team: deleteMember, guests: deleteGuest };
         const res = await deleteFnMap[activeTab](id);
         if (res?.error) showNotice('Error deleting: ' + res.error, 'error');
         else {
@@ -785,54 +735,6 @@ const Admin = () => {
                     </div>
                 </div>
             );
-        } else if (activeTab === 'network') {
-            return (
-                <div className="form-grid">
-                    <div className="input-group" style={{ background: 'rgba(254,122,0,0.04)', border: '1px solid rgba(254,122,0,0.2)', borderRadius: '8px', padding: '12px 14px' }}>
-                        <p style={{ margin: 0, fontSize: '11px', color: 'var(--accent-orange)', fontWeight: '800', letterSpacing: '1px' }}>
-                            MULTI-SELECT ENABLED
-                        </p>
-                        <p style={{ margin: '6px 0 0', fontSize: '11px', color: '#aaa', lineHeight: 1.6 }}>
-                            Cloudinary picker: click multiple images → confirm.<br />
-                            File upload: select multiple files at once.
-                        </p>
-                    </div>
-                    <div className="input-group">
-                        <label>Caption <span style={{ color: '#888', fontWeight: 400, fontSize: '11px' }}>(optional — single upload only)</span></label>
-                        <input type="text" name="caption" value={formData.caption || ''} onChange={handleInputChange} placeholder="e.g. India AI Impact Summit 2024" disabled={networkFileBatch.length > 0} />
-                    </div>
-                    <div className="input-group">
-                        <label style={{ color: 'var(--accent-orange)' }}>IMAGE — ANY ASPECT RATIO</label>
-                        <div className="upload-container">
-                            {networkFileBatch.length > 0 ? (
-                                <div style={{ background: '#0a0a0a', border: '1px solid #333', borderRadius: '8px', padding: '16px', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <div>
-                                        <p style={{ margin: 0, fontWeight: '800', fontSize: '13px', color: '#fff' }}>
-                                            {networkFileBatch.length} files selected
-                                        </p>
-                                        <p style={{ margin: '4px 0 0', fontSize: '10px', color: '#888', letterSpacing: '1px' }}>
-                                            Click "Publish to Site" to upload all
-                                        </p>
-                                    </div>
-                                    <button type="button" onClick={() => setNetworkFileBatch([])} style={{ background: 'transparent', border: '1px solid #444', color: '#aaa', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '10px', fontWeight: '700' }}>
-                                        CLEAR
-                                    </button>
-                                </div>
-                            ) : (previewUrl || formData.image_url) ? (
-                                <div className="image-preview" style={{ width: '240px', aspectRatio: '1/1', marginBottom: '15px' }}>
-                                    <img src={previewUrl || formData.image_url} alt="prev" style={{ objectFit: 'cover', width: '100%', height: '100%', borderRadius: '8px' }} />
-                                </div>
-                            ) : null}
-                            <button type="button" onClick={openCloudinaryPicker} style={{ width: '100%', padding: '12px', background: '#111', color: '#fff', border: '1px solid #333', fontFamily: 'inherit', fontWeight: '700', letterSpacing: '1px', fontSize: '11px', cursor: 'pointer', marginBottom: '8px' }}>
-                                📂 BROWSE CLOUDINARY LIBRARY (multi-select)
-                            </button>
-                            <div style={{ textAlign: 'center', color: '#555', fontSize: '10px', fontWeight: '800', margin: '6px 0', letterSpacing: '2px' }}>— OR UPLOAD NEW FILES —</div>
-                            <input type="file" accept="image/*" multiple onChange={handleFileChange} />
-                            <p className="upload-hint" style={{ marginTop: '6px' }}>Hold Ctrl / Cmd to select multiple files.</p>
-                        </div>
-                    </div>
-                </div>
-            );
         } else if (activeTab === 'webinars') {
             return (
                 <div className="form-grid">
@@ -1017,9 +919,6 @@ const Admin = () => {
                     </button>
                     <button className={activeTab === 'webinars' ? 'nav-item active' : 'nav-item'} onClick={() => setActiveTab('webinars')}>
                         <span>🎓</span> {!isCollapsed && "WEBINARS"}
-                    </button>
-                    <button className={activeTab === 'network' ? 'nav-item active' : 'nav-item'} onClick={() => setActiveTab('network')}>
-                        <span>🌐</span> {!isCollapsed && "OUR NETWORK"}
                     </button>
                 </nav>
             </aside>
@@ -1307,17 +1206,6 @@ const Admin = () => {
                                         </div>
                                     );
                                 })}
-                            </div>
-                        )}
-                        {activeTab === 'network' && multiPickerSelected.length > 0 && (
-                            <div style={{ flexShrink: 0, paddingTop: '16px', borderTop: '1px solid #222', marginTop: '12px' }}>
-                                <button
-                                    onClick={confirmNetworkPickerSelection}
-                                    disabled={loading}
-                                    style={{ width: '100%', padding: '14px', background: 'var(--accent-orange)', color: '#000', border: 'none', fontFamily: 'inherit', fontWeight: '800', letterSpacing: '1px', fontSize: '12px', cursor: 'pointer', borderRadius: '6px' }}
-                                >
-                                    {loading ? 'ADDING...' : `ADD ${multiPickerSelected.length} IMAGE${multiPickerSelected.length !== 1 ? 'S' : ''} TO OUR NETWORK`}
-                                </button>
                             </div>
                         )}
                         {activeTab === 'team' && multiPickerSelected.length > 0 && (

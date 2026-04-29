@@ -640,7 +640,7 @@ const Events = () => {
                     </header>
 
                     {/* — NETWORK IMAGE STRIP — */}
-                    {data.networkImages.length > 0 && (
+                    {/* {data.networkImages.length > 0 && (
                         <div className="network-strip-wrap">
                             <div
                                 className="network-strip"
@@ -670,14 +670,14 @@ const Events = () => {
                                 ))}
                             </div>
                         </div>
-                    )}
+                    )} */}
 
                     {/* — DIVIDER LABEL before editorial cards — */}
-                    {data.networkImages.length > 0 && (
+                    {/* {data.networkImages.length > 0 && (
                         <div className="network-sub-divider">
                             <span>GUEST SPEAKERS &amp; DIGITAL SESSIONS</span>
                         </div>
-                    )}
+                    )} */}
 
                     <div className="editorial-cards-stack">
 
