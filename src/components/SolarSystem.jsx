@@ -408,9 +408,7 @@ const InitiativesSection = () => {
                 height: `${globeContainerSize}px`,
                 margin: isMobile ? '0 auto' : undefined,
                 
-                // === 👇 THE FIX IS APPLIED HERE 👇 ===
-                transform: isMobile ? 'translate(15vw, 5vh)' : undefined, 
-                // =====================================
+                transform: undefined,
 
                 pointerEvents: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center'
               }}>

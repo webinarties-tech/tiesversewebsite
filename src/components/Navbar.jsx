@@ -212,19 +212,20 @@ const Navbar = () => {
           </button>
         </div>
 
-        {/* Mobile Navigation Drawer */}
-        <nav className={`navbar__mobile-nav ${isMobileMenuOpen ? 'navbar__mobile-nav--open' : ''}`}>
-          <ul className="mobile-nav-list">
-            {navItems.map((item) => (
-              <li key={item.label} className="mobile-nav-item">
-                <button className="mobile-nav-link" onClick={() => handleNavigation(item)}>
-                  {item.label}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </nav>
       </header>
+
+      {/* Mobile Navigation Drawer — must be outside <header> so position:fixed works on mobile */}
+      <nav className={`navbar__mobile-nav ${isMobileMenuOpen ? 'navbar__mobile-nav--open' : ''}`}>
+        <ul className="mobile-nav-list">
+          {navItems.map((item) => (
+            <li key={item.label} className="mobile-nav-item">
+              <button className="mobile-nav-link" onClick={() => handleNavigation(item)}>
+                {item.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </nav>
     </>
   )
 }
