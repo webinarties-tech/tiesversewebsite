@@ -152,12 +152,10 @@ const STATIC_CSS = `
     -webkit-mask-image: -webkit-radial-gradient(white, black);
     transform: translateZ(0); 
   }
-  .marquee-img { 
-    width: 100%; height: 100%; object-fit: cover; 
-    transition: transform 0.4s ease;
-    transform: translateZ(0); 
+  .marquee-img {
+    width: 100%; height: 100%; object-fit: cover;
+    transform: translateZ(0);
   }
-  .marquee-item:hover .marquee-img { transform: scale(1.06) translateZ(0); }
   @keyframes marquee-scroll { 
     0% { transform: translate3d(0, 0, 0); } 
     100% { transform: translate3d(-50%, 0, 0); } 
@@ -803,8 +801,8 @@ const Events = () => {
                                         src={item.src}
                                         alt="Summit Showcase"
                                         className="marquee-img"
-                                        loading="lazy"
-                                        decoding="async"
+                                        loading="eager"
+                                        decoding="sync"
                                         width="380"
                                         height="285"
                                     />
